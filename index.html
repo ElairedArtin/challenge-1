@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Операция «Спасти Олега»</title>
+<style>
+:root{
+  --cream:#f5efd9;
+  --paper:#fffdf7;
+  --ink:#111111;
+  --muted:#69645b;
+  --red:#e6193c;
+  --red2:#b90f2c;
+  --line:#171717;
+  --board:#1b1917;
+  --blue:#92d4e8;
+  --shadow:0 18px 55px rgba(0,0,0,.18);
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#181818;color:var(--ink);font-family:Arial,Roboto,sans-serif}
+button{font:inherit}
+button:focus-visible{outline:3px solid #55a8ff;outline-offset:3px}
+.app{width:100%;height:100vh;background:var(--cream);overflow:hidden}
+.topbar{
+  height:54px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:2px solid var(--line);background:rgba(245,239,217,.98);position:relative;z-index:50
+}
+.logo{font-size:19px;font-weight:900;letter-spacing:-.03em}.logo span{color:var(--red)}
+.tag{font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;border:1.5px solid #111;border-radius:999px;padding:6px 10px}
+.screen{
+  display:none;width:100%;height:calc(100vh - 54px);position:relative;overflow:hidden;
+}
+.screen.active{display:block;animation:fadeIn .28s ease both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.btn{
+  border:2px solid #111;border-radius:11px;padding:11px 17px;font-weight:900;cursor:pointer;
+  background:#111;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.14);transition:.16s;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn.red{background:var(--red);border-color:var(--red2)}
+.btn.light{background:var(--paper);color:#111}
+.btn.small{padding:8px 12px;font-size:13px}
+.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.16em;font-weight:900;color:var(--red)}
+.meter{height:18px;border:2px solid #111;border-radius:999px;overflow:hidden;background:#e4dec9}
+.meter span{display:block;height:100%;width:23%;background:var(--red);transition:width .45s ease}
+.meter-row{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:8px;font-weight:900}
+[data-score]{white-space:nowrap}
+
+/* INTRO */
+.intro{
+  height:100%;display:grid;grid-template-columns:1.08fr .92fr;background:var(--paper)
+}
+.intro-art{height:100%;overflow:hidden;border-right:2px solid #111;background:#eee}
+.intro-art img{width:100%;height:100%;object-fit:cover;object-position:center}
+.intro-copy{
+  display:flex;flex-direction:column;justify-content:center;padding:clamp(32px,5vw,84px);
+}
+.intro-copy h1{font-size:clamp(42px,5vw,76px);line-height:.94;letter-spacing:-.055em;margin:10px 0 25px}
+.type-line{
+  font-size:clamp(20px,2.05vw,31px);line-height:1.28;margin:5px 0;opacity:0;transform:translateY(8px)
+}
+.type-line.show{animation:lineIn .45s ease forwards}
+.type-line.last{font-style:italic;color:#3f3b35}
+@keyframes lineIn{to{opacity:1;transform:none}}
+.start-row{margin-top:30px;opacity:0}.start-row.show{animation:lineIn .35s ease forwards}
+
+/* STORY */
+.story{background:#0b0b0b}
+.story video{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;
+  opacity:0;pointer-events:none;transition:opacity .12s linear
+}
+.story video.current{opacity:1}
+.story-caption{
+  position:absolute;left:clamp(26px,4.2vw,74px);top:clamp(28px,5vh,58px);
+  max-width:min(740px,72vw);z-index:12;opacity:0;transform:translateY(10px);
+  background:rgba(245,239,217,.92);color:#111;border:2px solid #111;border-radius:12px;
+  padding:12px 18px;font-weight:900;font-size:clamp(27px,3.5vw,54px);line-height:1.03;
+  letter-spacing:-.035em;box-shadow:0 10px 26px rgba(0,0,0,.2)
+}
+.story-caption.visible{opacity:1;transform:none;transition:.25s ease}
+.story-caption.dramatic{
+  left:50%;top:50%;transform:translate(-50%,-42%);text-align:center;
+  background:rgba(0,0,0,.68);color:#fff;border-color:#fff;
+  font-size:clamp(36px,5vw,72px);max-width:920px
+}
+.story-caption.dramatic.visible{transform:translate(-50%,-50%)}
+.skip{
+  position:absolute;right:18px;top:16px;z-index:20;background:rgba(0,0,0,.56);color:#fff;
+  border:1px solid rgba(255,255,255,.55);border-radius:999px;padding:8px 12px;font-size:12px;cursor:pointer
+}
+.story-progress{
+  position:absolute;left:50%;bottom:17px;transform:translateX(-50%);display:flex;gap:7px;z-index:20
+}
+.story-progress i{width:26px;height:4px;background:#ffffff4a;border-radius:999px;overflow:hidden}
+.story-progress i.active{background:#fff}
+
+/* MISSION */
+.mission{
+  height:100%;background:
+    linear-gradient(90deg,rgba(0,0,0,.82) 0%,rgba(0,0,0,.65) 49%,rgba(0,0,0,.35) 100%),
+    url("assets/oleg_gloom.png") center/cover no-repeat;
+  display:grid;grid-template-columns:minmax(0,1.08fr) minmax(440px,.92fr);align-items:center;
+  padding:clamp(28px,4vw,68px);color:#fff
+}
+.mission-copy{max-width:840px}
+.mission-copy h1{font-size:clamp(38px,4.6vw,68px);line-height:.98;letter-spacing:-.05em;margin:9px 0 18px}
+.mission-copy p{font-size:clamp(16px,1.55vw,23px);line-height:1.42;margin:0 0 17px}
+.mission-copy .storytext{color:#f4f0e6;max-width:810px}
+.mission-card{
+  background:rgba(245,239,217,.95);color:#111;border:2px solid #111;border-radius:20px;
+  padding:clamp(22px,2.6vw,36px);box-shadow:var(--shadow)
+}
+.mission-card h2{font-size:clamp(27px,2.45vw,37px);line-height:1.04;margin:6px 0 22px;letter-spacing:-.025em}
+.mission-card h2 .keep-line{white-space:nowrap}
+.mission-card .score{font-size:clamp(34px,4vw,56px);font-weight:900;color:var(--red);margin-top:10px}
+
+/* BOARD */
+.board-screen{padding:20px;background:#27231f}
+.board-wrap{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 285px;gap:18px}
+.board{
+  min-height:0;border:2px solid #050505;border-radius:17px;padding:24px 27px;background:
+    radial-gradient(circle at 15% 20%,rgba(255,255,255,.035),transparent 25%),
+    linear-gradient(135deg,#181715,#292520);color:#fff;box-shadow:var(--shadow)
+}
+.board h1{font-size:clamp(35px,4vw,58px);line-height:.98;letter-spacing:-.045em;margin:4px 0 3px}
+.board-sub{
+  font-family:"Segoe Print","Comic Sans MS",cursive;color:#ff8196;font-size:clamp(15px,1.4vw,21px);
+  transform:rotate(-1deg);margin:0 0 18px 8px
+}
+.cards{height:calc(100% - 105px);display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:center;padding:2px 4px 5px}
+.person{
+  background:#f5efd9;color:#111;padding:12px 12px 14px;border:1.5px solid #111;box-shadow:0 12px 23px #0008;
+  min-height:0;height:min(430px,88%);position:relative;transform:rotate(-1.1deg);cursor:pointer;transition:.18s;
+  display:flex;flex-direction:column
+}
+.person:nth-child(2){transform:rotate(1.2deg);margin-top:22px}.person:nth-child(3){transform:rotate(-.4deg)}
+.person.active:hover{transform:translateY(-5px)}
+.pin{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--red);border:2px solid #111;top:-9px;left:50%}
+.photo{flex:1;min-height:150px;background:#d8d4c8;border:1.5px solid #111;display:grid;place-items:center;overflow:hidden}
+.avatar{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;background:#111;color:#fff;border:6px solid var(--red);font-size:48px;font-weight:900}
+.person h3{font-size:clamp(23px,2.1vw,31px);margin:10px 0 3px}.quote{font-size:clamp(15px,1.3vw,19px);font-weight:800;line-height:1.22}
+.person.locked{filter:grayscale(1);opacity:.46;cursor:not-allowed}
+.board-side{
+  height:100%;background:var(--paper);border:2px solid #111;border-radius:17px;padding:22px;
+  display:flex;flex-direction:column;justify-content:space-between
+}
+.board-side h2{font-size:26px;line-height:1;margin:8px 0 14px}
+.board-side p{font-size:15px;line-height:1.4}
+.learned{
+  display:none;margin-top:22px;padding-top:18px;border-top:1.5px dashed #9d9687
+}
+.learned.show{display:block;animation:noteIn .35s ease both}
+.learned-title{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:10px}
+.learned-rule{display:grid;grid-template-columns:28px 1fr;gap:9px;align-items:start;margin:9px 0;font-size:14px;line-height:1.3;font-weight:800}
+.learned-rule b{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:#111;color:#fff;font-size:11px}
+@keyframes noteIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* CASE */
+.case-screen{padding:18px 24px;background:var(--cream)}
+.case-wrap{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px}
+.case-head{display:flex;justify-content:space-between;align-items:end;gap:20px}
+.case-head h1{font-size:clamp(29px,3.2vw,46px);line-height:1;margin:3px 0 0;letter-spacing:-.035em}
+.score-pill{border:2px solid #111;background:#fff;padding:8px 12px;border-radius:999px;font-weight:900;font-size:14px}
+.case-grid{min-height:0;display:grid;grid-template-columns:.92fr 1.08fr;gap:20px;align-items:start}
+.case-left{min-height:0;display:flex;flex-direction:column;gap:12px}
+.email{background:#fff;border:2px solid #111;border-radius:16px;overflow:hidden;box-shadow:var(--shadow);display:grid;grid-template-rows:auto auto auto;align-self:start;width:100%}
+.mailbar{height:34px;background:#ecebe8;border-bottom:1px solid #bbb;display:flex;align-items:center;gap:6px;padding:0 14px}
+.dot{width:9px;height:9px;border-radius:50%;background:#aaa}.dot:first-child{background:var(--red)}
+.meta{padding:12px 18px 5px;font-size:12.5px;line-height:1.45;color:#454545}
+.mailbody{padding:8px 18px 16px}
+.mailbody h2{font-size:clamp(22px,2.2vw,32px);margin:2px 0 12px}
+.mailbody p{font-size:clamp(14px,1.25vw,17px);line-height:1.4;margin:0 0 12px}
+.fake{display:inline-block;padding:10px 15px;background:#1967d2;color:#fff;border-radius:5px;font-weight:800;font-size:14px}
+.case-question{
+  background:#fff4c7;border-left:5px solid var(--red);border-radius:8px;padding:12px 15px;
+  font-size:clamp(15px,1.3vw,18px);line-height:1.35
+}
+.choices{min-height:0;display:flex;flex-direction:column;align-items:stretch}
+.choices h2{font-size:clamp(24px,2.4vw,34px);margin:0 0 10px}
+.choice{
+  width:100%;min-height:88px;display:grid;grid-template-columns:38px 1fr;align-items:center;gap:11px;
+  background:var(--paper);border:2px solid #111;border-radius:12px;padding:13px 14px;margin-bottom:10px;text-align:left;
+  font-size:clamp(14px,1.25vw,18px);line-height:1.28;cursor:pointer;transition:.15s
+}
+.choice:hover{background:#fff7d7;transform:translateX(3px)}
+.letter{width:31px;height:31px;border-radius:5px;background:#111;color:#fff;display:grid;place-items:center;font-weight:900}
+.hint{font-size:13px;color:#5b574f;border:1px dashed #777;border-radius:9px;padding:9px 11px;background:#fffaf0}
+
+/* MODAL FEEDBACK */
+.modal{position:absolute;inset:0;z-index:70;background:rgba(0,0,0,.58);display:none;place-items:center;padding:24px}
+.modal.show{display:grid}
+.feedback{
+  width:min(680px,94vw);background:var(--paper);border:3px solid #111;border-radius:18px;padding:25px 27px;box-shadow:0 24px 70px #0008
+}
+.feedback h2{font-size:clamp(27px,3vw,39px);line-height:1;margin:0 0 12px}
+.feedback p{font-size:17px;line-height:1.42;margin:0 0 15px}
+.delta{font-weight:900;font-size:18px;margin:14px 0}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}
+
+/* RULE */
+.rule-screen{padding:18px 24px;background:var(--cream)}
+.rule-wrap{height:100%;display:grid;grid-template-columns:minmax(0,1.26fr) minmax(310px,.74fr);gap:19px}
+.rule{
+  height:100%;background:var(--paper);border:2px solid #111;border-radius:18px;padding:clamp(20px,2.4vw,34px);
+  display:flex;flex-direction:column;box-shadow:var(--shadow)
+}
+.rule h1{font-size:clamp(34px,4vw,57px);line-height:.98;letter-spacing:-.045em;margin:5px 0 13px}
+.teaser{font-size:clamp(13px,1.15vw,16.5px);line-height:1.38;background:#fff4c7;border-left:5px solid var(--red);padding:11px 13px;margin-bottom:10px}
+.rules-list{display:flex;flex-direction:column;gap:18px;margin-top:18px}
+.rule-line{display:grid;grid-template-columns:42px 1fr;gap:13px;padding:0;font-size:clamp(13px,1.15vw,16.5px);line-height:1.38}
+.rule-line + .rule-line{padding-top:4px}
+.rule-num{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--red);color:#fff;font-weight:900}
+.rule-footer{flex:1;min-height:115px;display:flex;flex-direction:column;justify-content:space-evenly}
+.ps{
+  margin:0;padding:8px 0;font-family:"Segoe Print","Comic Sans MS",cursive;
+  font-size:clamp(21px,2.2vw,32px);line-height:1.08;font-weight:700;transform:rotate(-1deg);
+  min-height:52px;overflow:visible
+}
+.ps .write{
+  display:inline-block;white-space:nowrap;clip-path:inset(0 100% 0 0);will-change:clip-path
+}
+.ps.writing .write{animation:handwrite 1.06s steps(26,end) .22s forwards}
+.ps .red-write{color:var(--red);text-decoration:underline;text-underline-offset:4px}
+@keyframes handwrite{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.rule-actions{display:flex;gap:8px;margin:0}
+.happy-panel{
+  height:100%;border:2px solid #111;border-radius:18px;overflow:hidden;background:
+  linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.48)),
+  url("assets/oleg_intro.png") 12% center/auto 92% no-repeat,
+  #e6e3db;
+  position:relative;box-shadow:var(--shadow)
+}
+.happy-note{position:absolute;left:16px;right:16px;bottom:15px;background:rgba(255,253,247,.94);border:2px solid #111;border-radius:11px;padding:12px;font-weight:900}
+
+/* fit smaller laptop heights without page scrolling */
+@media (max-height:760px){
+  .topbar{height:48px}.screen{height:calc(100vh - 48px)}
+  .board-screen,.case-screen,.rule-screen{padding-top:12px;padding-bottom:12px}
+  .mission{padding-top:24px;padding-bottom:24px}
+  .person{height:min(385px,87%)}
+  .rule{padding:18px 24px}.teaser{margin-bottom:5px}.rules-list{gap:13px;margin-top:13px}.rule-line{padding:0}.rule-footer{min-height:92px}
+}
+@media (max-height:650px){
+  .tag{display:none}.topbar{height:42px}.screen{height:calc(100vh - 42px)}
+  .board-screen,.case-screen,.rule-screen{padding:9px 15px}
+  .board{padding:16px 20px}.board h1{font-size:34px}.board-sub{margin-bottom:8px}
+  .case-grid{gap:13px}.choice{margin-bottom:6px;padding:7px 10px}
+  .rule h1{font-size:34px}.teaser{font-size:12.5px}.rules-list{gap:10px;margin-top:10px}.rule-line{font-size:12.7px}.rule-footer{min-height:80px}.ps{font-size:22px}
+}
+@media (max-width:900px){
+  html,body{overflow:auto}.app{height:auto;min-height:100vh}.screen{height:auto;min-height:calc(100vh - 54px);overflow:visible}
+  .intro,.mission,.board-wrap,.case-grid,.rule-wrap{grid-template-columns:1fr}
+  .intro-art{min-height:420px;border-right:0;border-bottom:2px solid #111}
+  .story{height:calc(100vh - 54px)}
+  .mission{padding:28px}.board-side{height:auto}.cards{grid-template-columns:1fr;height:auto}
+  .person{height:400px}.case-screen,.rule-screen,.board-screen{overflow:auto}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="logo">ОПЕРАЦИЯ <span>«СПАСТИ ОЛЕГА»</span></div>
+    <div class="tag">челлендж 01 · крючок</div>
+  </header>
+
+  <section class="screen active" id="intro">
+    <div class="intro">
+      <div class="intro-art"><img src="assets/oleg_intro.png" alt="Олег"></div>
+      <div class="intro-copy">
+        <div class="kicker">знакомство</div>
+        <h1>Знакомьтесь, это Олег.</h1>
+        <div class="type-line" id="line1">Сейчас он работает в информационной безопасности.</div>
+        <div class="type-line last" id="line2">Он всегда мечтал защищать людей...</div>
+        <div class="start-row" id="startRow">
+          <button class="btn red" onclick="startStory()">Смотреть, как все начиналось</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen story" id="story">
+    <video id="v0" preload="auto" playsinline src="assets/01_snow.mp4"></video>
+    <video id="v1" preload="auto" playsinline src="assets/02_infosec.mp4"></video>
+    <video id="v2" preload="auto" playsinline src="assets/03_poster.mp4"></video>
+    <video id="v3" preload="auto" playsinline src="assets/04_victory_gloom.mp4"></video>
+    <div class="story-caption" id="storyCaption"></div>
+    <button class="skip" onclick="finishStory()">Пропустить историю</button>
+    <div class="story-progress"><i></i><i></i><i></i><i></i></div>
+  </section>
+
+  <section class="screen" id="mission">
+    <div class="mission">
+      <div class="mission-copy">
+        <div class="kicker" style="color:#ff738b">что пошло не так</div>
+        <h1>У Олега появились причины немного разочароваться в&nbsp;человечестве.</h1>
+        <p class="storytext">Олег был уверен: если люди знают, как выглядит опасность, они&nbsp;смогут ее избежать. Но люди упорно хотели переходить по&nbsp;сомнительным ссылкам, скачивать зараженные файлы и&nbsp;обмениваться конфиденциальными материалами через мессенджеры...</p>
+      </div>
+      <div class="mission-card">
+        <div class="kicker">состояние системы</div>
+        <h2><span class="keep-line">Вера Олега в человечество</span><br>серьезно пошатнулась.</h2>
+        <div class="meter-row"><span>Текущий уровень</span><strong class="score" data-score>23%</strong></div>
+        <div class="meter"><span data-meter></span></div>
+        <p style="font-size:16px;line-height:1.4;margin:20px 0 18px"><b>Но еще не все потеряно...</b><br>Попробуем помочь?</p>
+        <button class="btn red" onclick="go('board')">Помочь Олегу</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen board-screen" id="board">
+    <div class="board-wrap">
+      <div class="board">
+        <div class="kicker" style="color:#ff7a91">архив душевных травм</div>
+        <h1>Они разбили сердце Олегу...</h1>
+        <div class="board-sub">и немного всей информационной безопасности.</div>
+        <div class="cards">
+          <article class="person active" onclick="go('case')">
+            <span class="pin"></span><div class="photo"><div class="avatar">О</div></div>
+            <h3>Олеся</h3><div class="quote">«Да я только посмотреть открыла».</div>
+          </article>
+          <article class="person locked"><span class="pin"></span><div class="photo"></div><h3>Виктор</h3><div class="quote">История пока закрыта.</div></article>
+          <article class="person locked"><span class="pin"></span><div class="photo"></div><h3>Андрей</h3><div class="quote">История пока закрыта.</div></article>
+        </div>
+      </div>
+      <aside class="board-side">
+        <div>
+          <div class="kicker">твоя миссия</div>
+          <h2>Вернуть хотя бы часть веры</h2>
+          <p>Начни с Олеси. Выбери, что ей делать с письмом.</p>
+          <div class="meter-row"><span>Вера Олега</span><b data-score>23%</b></div>
+          <div class="meter"><span data-meter></span></div>
+          <div class="learned" id="learnedRules">
+            <div class="learned-title">Правила Олега</div>
+            <div class="learned-rule"><b>01</b><span>Проверь отправителя и ссылку до клика.</span></div>
+            <div class="learned-rule"><b>02</b><span>Есть сомнение — сообщи в ИБ.</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="screen case-screen" id="case">
+    <div class="case-wrap">
+      <div class="case-head">
+        <div><div class="kicker">история 01 / Олеся</div><h1>«Да я только посмотреть открыла»</h1></div>
+        <div class="score-pill">Вера Олега: <span data-score>23%</span></div>
+      </div>
+      <div class="case-grid">
+        <div class="case-left">
+          <div class="email">
+            <div class="mailbar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+            <div class="meta"><b>От:</b> Служба Microsoft 365 &lt;service-notify@outlook-support.example&gt;<br><b>Тема:</b> Требуется обновление Outlook</div>
+            <div class="mailbody">
+              <h2>Обновите Outlook до конца рабочего дня</h2>
+              <p>Для продолжения работы с корпоративной почтой установите актуальную версию Outlook. Обновление займет не больше двух минут.</p>
+              <span class="fake">Обновить Outlook</span>
+            </div>
+          </div>
+          <div class="case-question"><b>Письмо выглядит вполне рабочим.</b> Что сделаешь?</div>
+        </div>
+        <div class="choices">
+          <h2>Как поступишь?</h2>
+          <button class="choice" onclick="answer('look')"><span class="letter">А</span><span>Нажму посмотреть. Если попросят пароль или что-то скачать — закрою.</span></button>
+          <button class="choice" onclick="answer('share')"><span class="letter">Б</span><span>Перешлю коллегам и спрошу, им такое приходило?</span></button>
+          <button class="choice" onclick="answer('report')"><span class="letter">В</span><span>Пожалуюсь в ИБ. Похоже, спам какой-то.</span></button>
+          <div class="hint"><b>Подсказки не будет.</b> Олег и так слишком многое пережил.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="feedbackModal">
+      <div class="feedback">
+        <h2 id="fbTitle"></h2><p id="fbText"></p><div class="delta" id="fbDelta"></div>
+        <div class="meter-row"><span>Вера Олега</span><b data-score>23%</b></div>
+        <div class="meter"><span data-meter></span></div>
+        <div class="actions" id="fbActions"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen rule-screen" id="rule">
+    <div class="rule-wrap">
+      <div class="rule">
+        <div class="kicker">что здесь важно</div>
+        <h1>Фишинг не всегда выглядит подозрительно</h1>
+        <div class="teaser">Это не обязательно выигрыш в лотерею, наследство австралийской бабушки или «это ты на фотках с той вечеринки???». Фишинг часто маскируется под обычные рабочие и бытовые задачи: обновить программу, подтвердить данные, принять посылку или срочно что-то проверить.</div>
+        <div class="rules-list">
+          <div class="rule-line"><div class="rule-num">1</div><div><b>Перед тем как нажать, проверь две вещи: кто прислал письмо и куда ведет ссылка.</b><br>Проверь полный адрес отправителя и куда ведет ссылка. Фишинговые адреса часто похожи на настоящие. Ссылку не открывай: наведи на нее курсор — адрес появится внизу окна. Особенно если тебя торопят что-то обновить, подтвердить или проверить.</div></div>
+          <div class="rule-line"><div class="rule-num">2</div><div><b>Что-то хотя бы немного кажется странным — сообщи в ИБ.</b><br>Не проверяй подозрительное письмо на себе или коллегах. ИБ разберется. Для сообщения достаточно сомнения.</div></div>
+        </div>
+        <div class="rule-footer">
+          <div class="ps" id="olegPs"><span class="write">Если не ради себя, то <span class="red-write">хотя бы ради Олега.</span></span></div>
+          <div class="rule-actions"><button class="btn red small" onclick="go('board')">Вернуться к доске</button></div>
+        </div>
+      </div>
+      <div class="happy-panel"><div class="happy-note">Вера Олега в человечество: <span data-score>47%</span></div></div>
+    </div>
+  </section>
+</div>
+<audio id="penSound" src="assets/pen_sound.mp3" preload="auto"></audio>
+
+<script>
+const screens = [...document.querySelectorAll('.screen')];
+let score = 23;
+const baseScore = 23;
+let solved = false;
+
+function go(id){
+  screens.forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  location.hash = id;
+  updateLearnedRules();
+  if(id==='rule') playPenEffect();
+}
+
+function paintScore(){
+  document.querySelectorAll('[data-score]').forEach(el=>el.textContent=score+'%');
+  document.querySelectorAll('[data-meter]').forEach(el=>el.style.width=Math.max(4,Math.min(100,score))+'%');
+}
+
+function updateLearnedRules(){
+  const note=document.getElementById('learnedRules');
+  if(!note) return;
+  note.classList.toggle('show', solved);
+}
+
+function playPenEffect(){
+  const ps=document.getElementById('olegPs');
+  const sound=document.getElementById('penSound');
+  if(!ps) return;
+
+  ps.classList.remove('writing');
+  void ps.offsetWidth;
+
+  setTimeout(()=>{
+    ps.classList.add('writing');
+    if(sound){
+      sound.pause();
+      sound.currentTime=0;
+      sound.volume=.22;
+      sound.play().catch(()=>{});
+    }
+  },180);
+}
+
+function introAnimation(){
+  setTimeout(()=>document.getElementById('line1').classList.add('show'),450);
+  setTimeout(()=>document.getElementById('line2').classList.add('show'),1350);
+  setTimeout(()=>document.getElementById('startRow').classList.add('show'),2350);
+}
+
+const videos = [0,1,2,3].map(i=>document.getElementById('v'+i));
+const caption = document.getElementById('storyCaption');
+const dots = [...document.querySelectorAll('.story-progress i')];
+let currentScene = 0;
+
+const sceneCaptions = [
+  [{start:.25,end:2.7,text:'Тяга была с детства...',cls:''}],
+  [{start:.18,end:2.7,text:'Мечта сбылась!',cls:''}],
+  [{start:.22,end:3.0,text:'Компания в надежных руках.',cls:''}],
+  [
+    {start:.25,end:4.18,text:'И Олег был счастлив...',cls:''},
+    {start:4.50,end:7.05,text:'Но потом случились они...',cls:'dramatic'}
+  ]
+];
+
+function showCaption(item){
+  caption.className='story-caption'+(item.cls?' '+item.cls:'');
+  caption.textContent=item.text;
+  requestAnimationFrame(()=>caption.classList.add('visible'));
+}
+function hideCaption(){caption.classList.remove('visible')}
+
+function captionForTime(scene,t){
+  const item=sceneCaptions[scene].find(x=>t>=x.start&&t<x.end);
+  if(!item){hideCaption();return}
+  if(caption.textContent!==item.text || !caption.classList.contains('visible')) showCaption(item);
+}
+
+function startStory(){
+  go('story');
+  currentScene=0;
+  videos.forEach((v,i)=>{v.pause();v.currentTime=0;v.classList.toggle('current',i===0)});
+  dots.forEach((d,i)=>d.classList.toggle('active',i===0));
+  videos[0].play().catch(()=>{});
+}
+function playScene(i){
+  currentScene=i;
+  hideCaption();
+  videos.forEach((v,n)=>v.classList.toggle('current',n===i));
+  dots.forEach((d,n)=>d.classList.toggle('active',n===i));
+  videos[i].currentTime=0;
+  videos[i].play().catch(()=>{});
+}
+function finishStory(){
+  videos.forEach(v=>v.pause());
+  hideCaption();
+  go('mission');
+}
+videos.forEach((v,i)=>{
+  v.addEventListener('timeupdate',()=>{ if(i===currentScene) captionForTime(i,v.currentTime) });
+  v.addEventListener('ended',()=>{ if(i<videos.length-1) playScene(i+1); else finishStory(); });
+});
+
+function answer(type){
+  const modal=document.getElementById('feedbackModal');
+  const title=document.getElementById('fbTitle');
+  const text=document.getElementById('fbText');
+  const delta=document.getElementById('fbDelta');
+  const actions=document.getElementById('fbActions');
+  const reviewing = solved && type !== 'report';
+
+  if(type==='look'){
+    if(!reviewing) score=14;
+    title.textContent='Олеся тоже хотела только посмотреть.';
+    text.textContent='Но переход по подозрительной ссылке — уже эксперимент на себе. Не нужно ждать, пока письмо попросит пароль или загрузку.';
+    delta.textContent=reviewing ? 'Правильный ответ уже найден — просто смотрим разбор.' : 'Вера Олега в человечество: −9%';
+    actions.innerHTML='<button class="btn" onclick="closeFeedback('+reviewing+')">Посмотреть другие варианты</button>';
+  } else if(type==='share'){
+    if(!reviewing) score=17;
+    title.textContent='Теперь подозрительное письмо есть еще и у коллег.';
+    text.textContent='То, что одинаковое письмо пришло нескольким людям, не делает его безопасным. Пересылать его дальше — так себе способ проверки.';
+    delta.textContent=reviewing ? 'Правильный ответ уже найден — просто смотрим разбор.' : 'Вера Олега в человечество: −6%';
+    actions.innerHTML='<button class="btn" onclick="closeFeedback('+reviewing+')">Посмотреть другие варианты</button>';
+  } else {
+    score=47;
+    solved=true;
+    updateLearnedRules();
+    title.textContent='Олег где-то очень довольно кивнул.';
+    text.textContent='Да. Если письмо кажется странным, не нужно сначала проверять его на себе или коллегах. ИБ разберется.';
+    delta.textContent='Вера Олега в человечество: +24%';
+    actions.innerHTML=`<button class="btn" onclick="closeFeedback(true)">Посмотреть другие варианты</button><button class="btn red" onclick="go('rule');document.getElementById('feedbackModal').classList.remove('show')">Что запомнить</button>`;
+  }
+  paintScore();
+  modal.classList.add('show');
+}
+function closeFeedback(keepScore=false){
+  document.getElementById('feedbackModal').classList.remove('show');
+  if(!keepScore && !solved) score=baseScore;
+  paintScore();
+}
+function resetDemo(){
+  score=baseScore;
+  solved=false;
+  updateLearnedRules();
+  paintScore();
+  document.getElementById('feedbackModal').classList.remove('show');
+  go('intro');
+  introAnimation();
+}
+paintScore();
+updateLearnedRules();
+introAnimation();
+
+// Debug convenience: open index.html#mission / #board / #case / #rule to inspect a screen directly.
+const hash=location.hash.replace('#','');
+if(hash && document.getElementById(hash) && hash!=='intro'){
+  screens.forEach(s=>s.classList.remove('active'));
+  document.getElementById(hash).classList.add('active');
+}
+</script>
+</body>
+</html>
